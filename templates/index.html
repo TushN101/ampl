@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SOQ Alert Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <div class="app-container">
+    <header class="header">
+      <h1>SOQ <span>Alert</span> Dashboard</h1>
+      <p>Maruti DMS — Suggested Order Quantity Analytics</p>
+    </header>
+
+    <!-- Upload Section -->
+    <section class="upload-section">
+      <div class="upload-header">
+        <div class="upload-left">
+          <label class="upload-label" for="fileInput">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            Choose File
+          </label>
+          <span class="upload-filename" id="uploadFilename">No file chosen</span>
+        </div>
+        <button class="upload-btn" id="uploadBtn" disabled>Analyze</button>
+        <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none;">
+      </div>
+      <div class="upload-status" id="uploadStatus"></div>
+    </section>
+
+    <!-- Summary Stats -->
+    <section class="summary-bar">
+      <div class="summary-stat">
+        <div class="stat-value" id="statSkus">--</div>
+        <div class="stat-label">Total SKUs</div>
+      </div>
+      <div class="summary-stat">
+        <div class="stat-value rupee" id="statSovValue">--</div>
+        <div class="stat-label">SOQ Value</div>
+      </div>
+      <div class="summary-stat">
+        <div class="stat-value rupee" id="statStockValue">--</div>
+        <div class="stat-label">Stock Value</div>
+      </div>
+      <div class="summary-stat">
+        <div class="stat-value" id="statDead" style="color:var(--accent-red)">--</div>
+        <div class="stat-label">Dead Stock</div>
+      </div>
+      <div class="summary-stat">
+        <div class="stat-value" id="statZero" style="color:var(--accent-orange)">--</div>
+        <div class="stat-label">Zero Stock</div>
+      </div>
+      <div class="summary-stat">
+        <div class="stat-value" id="statCbo" style="color:#dc2626">--</div>
+        <div class="stat-label">Backorders</div>
+      </div>
+      <div class="summary-stat">
+        <div class="stat-value" id="statOnOrder" style="color:var(--accent-blue)">--</div>
+        <div class="stat-label">On Order</div>
+      </div>
+    </section>
+
+    <!-- Search -->
+    <section class="search-section">
+      <div class="search-wrapper">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" class="search-input" id="searchInput" placeholder="Search by Part Number or Description..." autocomplete="off">
+        <div class="search-results" id="searchResults"></div>
+      </div>
+    </section>
+
+    <!-- Alert Cards (always open) -->
+    <section class="dashboards-grid" id="dashboardsGrid"></section>
+  </div>
+
+  <!-- Detail Modal -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle">Item Details</h2>
+        <button class="modal-close" id="modalClose">&times;</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
