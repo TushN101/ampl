@@ -1,28 +1,43 @@
-/* ===== SOQ Alert Dashboard — Light Theme, 4 Alerts, Upload ===== */
+/* ===== SOQ Alert Dashboard — Claude Theme JS ===== */
 
 (function () {
   'use strict';
 
-  // --- 4 Alert Definitions ---
+  // --- Dark Mode Logic ---
+  const themeToggleBtn = document.getElementById('themeToggle');
+  
+  function toggleTheme() {
+    if (document.documentElement.classList.contains('dark')) {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    } else {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    }
+  }
+  
+  if (themeToggleBtn) {
+    themeToggleBtn.addEventListener('click', toggleTheme);
+  }
+
+  // --- Alert Definitions ---
   var ALERT_DEFS = [
     {
       id: 'low_consumption_high_value',
       title: 'Low Consumption + High Value',
-      subtitle: 'Expensive slow-movers with SOQ suggested \u2014 customer may have left',
-      icon: '\u26A0',
-      color: 'yellow',
+      subtitle: 'Expensive slow-movers with SOQ suggested — customer may have left',
+      color: 'text-ochre',
       thresholds: [
         { key: 't_avg', label: 'Avg Consumption <', min: 0, max: 5, step: 0.1, defaultVal: 1.0, format: function(v){ return v.toFixed(1); } },
-        { key: 't_price', label: 'Price > \u20B9', min: 500, max: 120000, step: 500, defaultVal: 2000, format: function(v){ return formatINR(v); } },
+        { key: 't_price', label: 'Price > ₹', min: 500, max: 120000, step: 500, defaultVal: 2000, format: function(v){ return formatINR(v); } },
       ],
       valueTag: function(r){ return formatINR(r.PURCHASE_PRICE); },
     },
     {
       id: 'high_moq_trap',
       title: 'High MOQ Trap',
-      subtitle: 'Low stock + high MOQ + low consumption \u2014 forced bulk order on slow items',
-      icon: '\uD83D\uDED1',
-      color: 'red',
+      subtitle: 'Low stock + high MOQ + low consumption — forced bulk order',
+      color: 'text-clay',
       thresholds: [
         { key: 't_stock', label: 'Stock <', min: 0, max: 20, step: 1, defaultVal: 5, format: function(v){ return v; } },
         { key: 't_moq', label: 'MOQ >=', min: 1, max: 1000, step: 1, defaultVal: 5, format: function(v){ return v; } },
@@ -33,9 +48,8 @@
     {
       id: 'dead_stock_misclassified',
       title: 'Dead Stock Misclassified',
-      subtitle: 'Flagged dead but has demand \u2014 order blocked by incorrect marking',
-      icon: '\u26A0',
-      color: 'orange',
+      subtitle: 'Flagged dead but has demand — order blocked by incorrect marking',
+      color: 'text-ochre',
       thresholds: [
         { key: 't_stock', label: 'Stock <=', min: 0, max: 20, step: 1, defaultVal: 5, format: function(v){ return v; } },
       ],
@@ -44,31 +58,27 @@
     {
       id: 'double_order_risk',
       title: 'Double Order Risk',
-      subtitle: 'On Order exists AND SOQ generated \u2014 potential overstock',
-      icon: '\u26A0',
-      color: 'amber',
+      subtitle: 'On Order exists AND SOQ generated — potential overstock',
+      color: 'text-sky',
       thresholds: [],
       valueTag: function(r){ return 'OnOrd: ' + r.ON_ORDER_QTY + ' + SOQ: ' + r.SOQ_QTY; },
     },
   ];
 
-  // --- State ---
   var searchTimeout = null;
-
-  // --- Utility ---
+// Find this function in your app.js and update it
   function formatINR(num) {
-    if (num >= 10000000) return '\u20B9' + (num / 10000000).toFixed(2) + ' Cr';
-    if (num >= 100000) return '\u20B9' + (num / 100000).toFixed(2) + ' L';
-    if (num >= 1000) return '\u20B9' + (num / 1000).toFixed(1) + 'K';
-    return '\u20B9' + Math.round(num).toLocaleString('en-IN');
+    if (num >= 10000000) return '₹' + (num / 10000000).toFixed(2) + '\u00A0Cr';
+    if (num >= 100000) return '₹' + (num / 100000).toFixed(2) + '\u00A0L';
+    if (num >= 1000) return '₹' + (num / 1000).toFixed(1) + 'K';
+    return '₹' + Math.round(num).toLocaleString('en-IN');
   }
 
   function displayPart(item) {
-    if (item.is_superseded) return item.ROOT_PART_NUM + ' \u2192 ' + item.LATEST_PART_NUM;
+    if (item.is_superseded) return item.ROOT_PART_NUM + ' → ' + item.LATEST_PART_NUM;
     return item.ROOT_PART_NUM;
   }
 
-  // --- Upload ---
   function initUpload() {
     var fileInput = document.getElementById('fileInput');
     var uploadBtn = document.getElementById('uploadBtn');
@@ -80,7 +90,7 @@
         filenameEl.textContent = fileInput.files[0].name;
         uploadBtn.disabled = false;
       } else {
-        filenameEl.textContent = 'No file chosen';
+        filenameEl.textContent = 'No file selected';
         uploadBtn.disabled = true;
       }
     });
@@ -109,7 +119,6 @@
         statusEl.textContent = 'Loaded ' + data.rows + ' rows from ' + file.name;
         statusEl.className = 'upload-status success';
 
-        // Reload everything
         loadSummary();
         ALERT_DEFS.forEach(function (def) { fetchAlert(def.id); });
       } catch (e) {
@@ -120,7 +129,6 @@
     });
   }
 
-  // --- Fetch Summary ---
   async function loadSummary() {
     try {
       var res = await fetch('/api/summary');
@@ -135,33 +143,28 @@
     } catch (e) { console.error('Summary error', e); }
   }
 
-  // --- Build Dashboard Cards (always open) ---
   function buildDashboardCards() {
     var grid = document.getElementById('dashboardsGrid');
     grid.innerHTML = '';
 
     ALERT_DEFS.forEach(function (def) {
       var card = document.createElement('div');
-      card.className = 'alert-card ' + def.color;
+      card.className = 'alert-card';
       card.id = 'card-' + def.id;
 
-      // Header (no click handler — always open)
       var header = document.createElement('div');
       header.className = 'alert-card-header';
       header.innerHTML =
-        '<div class="alert-icon">' + def.icon + '</div>' +
         '<div class="alert-info">' +
-          '<div class="alert-title">' + def.title + '</div>' +
+          '<div class="alert-title ' + def.color + '">' + def.title + '</div>' +
           '<div class="alert-subtitle">' + def.subtitle + '</div>' +
         '</div>' +
-        '<div class="alert-count" id="count-' + def.id + '">--</div>';
+        '<div class="alert-count" id="count-' + def.id + '">—</div>';
       card.appendChild(header);
 
-      // Body (always visible)
       var body = document.createElement('div');
       body.className = 'alert-body';
 
-      // Threshold sliders
       if (def.thresholds.length > 0) {
         var threshDiv = document.createElement('div');
         threshDiv.className = 'threshold-controls';
@@ -177,29 +180,25 @@
 
           var slider = row.querySelector('.threshold-slider');
           var valSpan = row.querySelector('.threshold-value');
-          var debounce = null;
           slider.addEventListener('input', function () {
-            valSpan.textContent = t.format(parseFloat(slider.value));
-            clearTimeout(debounce);
-            debounce = setTimeout(function () { fetchAlert(def.id); }, 300);
+            valSpan.textContent = t.format(slider.value);
+            fetchAlert(def.id);
           });
         });
         body.appendChild(threshDiv);
       }
 
-      // Items list (fixed height, scrollable)
-      var itemsList = document.createElement('div');
-      itemsList.className = 'alert-items-list';
-      itemsList.id = 'items-' + def.id;
-      itemsList.innerHTML = '<div class="loading-spinner">Loading...</div>';
-      body.appendChild(itemsList);
+      var itemsDiv = document.createElement('div');
+      itemsDiv.className = 'alert-items-list';
+      itemsDiv.id = 'items-' + def.id;
+      itemsDiv.innerHTML = '<div class="loading-spinner">Analyzing Data...</div>';
+      body.appendChild(itemsDiv);
 
       card.appendChild(body);
       grid.appendChild(card);
     });
   }
 
-  // --- Fetch Alert Data ---
   async function fetchAlert(alertId) {
     var def = null;
     for (var i = 0; i < ALERT_DEFS.length; i++) {
@@ -214,7 +213,7 @@
     });
 
     var itemsContainer = document.getElementById('items-' + alertId);
-    itemsContainer.innerHTML = '<div class="loading-spinner">Loading...</div>';
+    itemsContainer.innerHTML = '<div class="loading-spinner">Updating Set...</div>';
 
     try {
       var res = await fetch('/api/alerts/' + alertId + '?' + params.toString());
@@ -223,25 +222,25 @@
       document.getElementById('count-' + alertId).textContent = data.count;
 
       if (data.items.length === 0) {
-        itemsContainer.innerHTML = '<div class="alert-empty">No items match current thresholds. Try adjusting the sliders.</div>';
+        itemsContainer.innerHTML = '<div class="alert-empty">No items match current parameters.</div>';
         return;
       }
 
       itemsContainer.innerHTML = data.items.map(function (item) {
         var partDisplay = displayPart(item);
         return '<div class="alert-item-row" data-part="' + item.ROOT_PART_NUM + '">' +
-          '<div>' +
+          '<div class="air-content">' +
             '<div class="air-part">' + partDisplay + '</div>' +
             '<div class="air-name">' + item.PART_DESC + '</div>' +
             '<div class="air-metrics">' +
-              '<span>Stock: ' + item.STOCK_QTY + '</span>' +
-              '<span>Avg: ' + item.AVG_CONSUMPTION + '</span>' +
+              '<span>STK: ' + item.STOCK_QTY + '</span>' +
+              '<span>AVG: ' + item.AVG_CONSUMPTION + '</span>' +
               '<span>SOQ: ' + item.SOQ_QTY + '</span>' +
-              (item.ON_ORDER_QTY > 0 ? '<span>OnOrd: ' + item.ON_ORDER_QTY + '</span>' : '') +
-              (item.CUST_BACK_ORDER > 0 ? '<span>CBO: ' + item.CUST_BACK_ORDER + '</span>' : '') +
+              (item.ON_ORDER_QTY > 0 ? '<span>ORD: ' + item.ON_ORDER_QTY + '</span>' : '') +
+              (item.CUST_BACK_ORDER > 0 ? '<span class="text-clay">CBO: ' + item.CUST_BACK_ORDER + '</span>' : '') +
             '</div>' +
           '</div>' +
-          '<div class="air-value-tag">' + def.valueTag(item) + '</div>' +
+          '<div class="air-value-tag ' + def.color + '">' + def.valueTag(item) + '</div>' +
         '</div>';
       }).join('');
 
@@ -253,12 +252,11 @@
         });
       });
     } catch (e) {
-      itemsContainer.innerHTML = '<div class="alert-empty">Error loading data.</div>';
+      itemsContainer.innerHTML = '<div class="alert-empty">Error processing data matrix.</div>';
       console.error('Alert fetch error', e);
     }
   }
 
-  // --- Search ---
   function initSearch() {
     var input = document.getElementById('searchInput');
     var resultsDiv = document.getElementById('searchResults');
@@ -282,18 +280,18 @@
       var data = await res.json();
 
       if (data.total === 0) {
-        resultsDiv.innerHTML = '<div class="search-no-results">No results found for "' + query + '"</div>';
+        resultsDiv.innerHTML = '<div class="search-no-results">No indices found for "' + query + '"</div>';
         resultsDiv.classList.add('active'); return;
       }
 
       resultsDiv.innerHTML = data.results.map(function (r) {
         return '<div class="search-result-item" data-part="' + r.item.ROOT_PART_NUM + '">' +
-          '<div class="sr-part">' + displayPart(r.item) + ' <span class="search-badge ' + r.match_type + '">' + r.match_type + ' ' + r.score + '%</span></div>' +
+          '<div class="sr-part">' + displayPart(r.item) + ' <span class="search-badge font-mono">' + r.match_type + ' ' + r.score + '%</span></div>' +
           '<div class="sr-name">' + r.item.PART_DESC + '</div>' +
           '<div class="sr-meta">' +
-            '<span>Stock: ' + r.item.STOCK_QTY + '</span>' +
-            '<span>Price: ' + formatINR(r.item.PURCHASE_PRICE) + '</span>' +
-            '<span>Avg: ' + r.item.AVG_CONSUMPTION + '/mo</span>' +
+            '<span>STK: ' + r.item.STOCK_QTY + '</span>' +
+            '<span>PRC: ' + formatINR(r.item.PURCHASE_PRICE) + '</span>' +
+            '<span>AVG: ' + r.item.AVG_CONSUMPTION + '/mo</span>' +
           '</div>' +
         '</div>';
       }).join('');
@@ -309,13 +307,12 @@
     } catch (e) { console.error('Search error', e); }
   }
 
-  // --- Detail Modal ---
   function openModal(item) {
     var overlay = document.getElementById('modalOverlay');
     var title = document.getElementById('modalTitle');
     var body = document.getElementById('modalBody');
 
-    title.textContent = item.ROOT_PART_NUM + ' \u2014 ' + item.PART_DESC;
+    title.textContent = item.ROOT_PART_NUM + ' — ' + item.PART_DESC;
 
     var stockMonths = item.AVG_CONSUMPTION > 0 ? (item.STOCK_QTY / item.AVG_CONSUMPTION).toFixed(1) : 'N/A';
     var sovValue = item.SOQ_QTY * item.PURCHASE_PRICE;
@@ -332,17 +329,17 @@
       { label: 'On Order Qty', value: item.ON_ORDER_QTY, cls: item.ON_ORDER_QTY > 0 ? 'highlight-blue' : '' },
       { label: 'Customer Back Order', value: item.CUST_BACK_ORDER, cls: item.CUST_BACK_ORDER > 0 ? 'highlight-red' : '' },
       { label: 'Stock Value', value: formatINR(stockValue), cls: stockValue > 50000 ? 'highlight-yellow' : '' },
-      { label: 'Months of Stock', value: stockMonths === 'N/A' ? 'N/A' : stockMonths + ' months', cls: parseFloat(stockMonths) > 3 ? 'highlight-yellow' : '' },
+      { label: 'Months of Stock', value: stockMonths === 'N/A' ? 'N/A' : stockMonths + ' mo', cls: parseFloat(stockMonths) > 3 ? 'highlight-yellow' : '' },
       { label: 'Min Order Qty', value: item.MINIMUM_ORDER_QTY },
       { label: 'SOQ Qty', value: item.SOQ_QTY, cls: item.SOQ_QTY > 0 ? 'highlight-blue' : '' },
       { label: 'SOQ Value', value: formatINR(sovValue), cls: item.SOQ_QTY > 0 ? 'highlight-blue' : '' },
-      { label: 'Avg Consumption (6m)', value: item.AVG_CONSUMPTION + ' / month', cls: item.AVG_CONSUMPTION < 1 ? 'highlight-yellow' : item.AVG_CONSUMPTION > 3 ? 'highlight-green' : '' },
+      { label: 'Avg Consumption (6m)', value: item.AVG_CONSUMPTION + ' / mo', cls: item.AVG_CONSUMPTION < 1 ? 'highlight-yellow' : item.AVG_CONSUMPTION > 3 ? 'highlight-green' : '' },
       { label: 'Wt Avg Consumption', value: item.WT_AVG_CONSUMPTION },
       { label: 'Transactions (6m)', value: item.TRANS_COUNT_6_MONTH },
       { label: 'Std Deviation', value: item.STANDARD_DEVIATION },
       { label: 'Re-Order Level', value: item.RE_ORDER_LEVEL },
       { label: 'Max Order Level', value: item.MAX_ORDER_LEVEL },
-      { label: 'Purchase Price', value: '\u20B9' + item.PURCHASE_PRICE.toLocaleString('en-IN', { maximumFractionDigits: 2 }) },
+      { label: 'Purchase Price', value: '₹' + item.PURCHASE_PRICE.toLocaleString('en-IN', { maximumFractionDigits: 2 }) },
       { label: 'Lead Time', value: item.LEAD_TIME + ' days' },
       { label: 'Dead Stock', value: isDead ? 'YES' : 'NO', cls: isDead ? 'highlight-red' : 'highlight-green' },
       { label: 'Location', value: item.LOC_CD || 'N/A' },
@@ -366,12 +363,10 @@
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') overlay.classList.remove('active'); });
   }
 
-  // --- Init ---
   async function init() {
     initUpload();
     loadSummary();
     buildDashboardCards();
-    // Auto-load all 4 alerts immediately
     ALERT_DEFS.forEach(function (def) { fetchAlert(def.id); });
     initSearch();
     initModal();

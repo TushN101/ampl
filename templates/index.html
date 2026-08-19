@@ -3,64 +3,82 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SOQ Alert Dashboard</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <title>SOQ Alert Dashboard — Claude Theme</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">  
+  <!-- Upgraded Typography: Instrument Sans, Newsreader, JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap" rel="stylesheet">
+
+  <!-- Prevent Flash of Unstyled Content (FOUC) for Dark Mode -->
+  <script>
+    if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  </script>
 </head>
 <body>
 
   <div class="app-container">
-    <header class="header">
-      <h1>SOQ <span>Alert</span> Dashboard</h1>
-      <p>Maruti DMS — Suggested Order Quantity Analytics</p>
+    <header class="header divider-bottom">
+      <div class="header-top">
+        <h1 class="font-sans">SOQ Alert Dashboard</h1>
+        <!-- Theme Toggle Button -->
+        <button id="themeToggle" class="theme-toggle" aria-label="Toggle Dark Mode">
+          <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+          <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        </button>
+      </div>
+      <p class="font-serif text-muted">Maruti DMS — Suggested Order Quantity Analytics</p>
     </header>
 
     <!-- Upload Section -->
-    <section class="upload-section">
+    <section class="upload-section divider-bottom">
       <div class="upload-header">
         <div class="upload-left">
-          <label class="upload-label" for="fileInput">
+          <label class="btn btn-primary" for="fileInput">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-            Choose File
+            Upload Source File
           </label>
-          <span class="upload-filename" id="uploadFilename">No file chosen</span>
+          <span class="upload-filename font-mono text-muted" id="uploadFilename">No file selected</span>
         </div>
-        <button class="upload-btn" id="uploadBtn" disabled>Analyze</button>
+        <button class="btn btn-secondary" id="uploadBtn" disabled>Analyze Data</button>
         <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none;">
       </div>
-      <div class="upload-status" id="uploadStatus"></div>
+      <div class="upload-status font-mono" id="uploadStatus"></div>
     </section>
 
     <!-- Summary Stats -->
-    <section class="summary-bar">
+    <section class="summary-bar divider-bottom">
       <div class="summary-stat">
-        <div class="stat-value" id="statSkus">--</div>
         <div class="stat-label">Total SKUs</div>
+        <div class="stat-value" id="statSkus">—</div>
       </div>
       <div class="summary-stat">
-        <div class="stat-value rupee" id="statSovValue">--</div>
         <div class="stat-label">SOQ Value</div>
+        <div class="stat-value" id="statSovValue">—</div>
       </div>
       <div class="summary-stat">
-        <div class="stat-value rupee" id="statStockValue">--</div>
         <div class="stat-label">Stock Value</div>
+        <div class="stat-value" id="statStockValue">—</div>
       </div>
       <div class="summary-stat">
-        <div class="stat-value" id="statDead" style="color:var(--accent-red)">--</div>
         <div class="stat-label">Dead Stock</div>
+        <div class="stat-value text-clay" id="statDead">—</div>
       </div>
       <div class="summary-stat">
-        <div class="stat-value" id="statZero" style="color:var(--accent-orange)">--</div>
         <div class="stat-label">Zero Stock</div>
+        <div class="stat-value text-clay" id="statZero">—</div>
       </div>
       <div class="summary-stat">
-        <div class="stat-value" id="statCbo" style="color:#dc2626">--</div>
         <div class="stat-label">Backorders</div>
+        <div class="stat-value text-clay" id="statCbo">—</div>
       </div>
       <div class="summary-stat">
-        <div class="stat-value" id="statOnOrder" style="color:var(--accent-blue)">--</div>
         <div class="stat-label">On Order</div>
+        <div class="stat-value text-main" id="statOnOrder">—</div>
       </div>
     </section>
 
@@ -68,12 +86,12 @@
     <section class="search-section">
       <div class="search-wrapper">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-        <input type="text" class="search-input" id="searchInput" placeholder="Search by Part Number or Description..." autocomplete="off">
+        <input type="text" class="search-input font-sans" id="searchInput" placeholder="Search part number or description..." autocomplete="off">
         <div class="search-results" id="searchResults"></div>
       </div>
     </section>
 
-    <!-- Alert Cards (always open) -->
+    <!-- Alert Cards Grid -->
     <section class="dashboards-grid" id="dashboardsGrid"></section>
   </div>
 
@@ -81,8 +99,10 @@
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal-content">
       <div class="modal-header">
-        <h2 id="modalTitle">Item Details</h2>
-        <button class="modal-close" id="modalClose">&times;</button>
+        <h2 id="modalTitle" class="font-sans">Item Details</h2>
+        <button class="modal-close" id="modalClose">
+            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
       </div>
       <div class="modal-body" id="modalBody"></div>
     </div>
