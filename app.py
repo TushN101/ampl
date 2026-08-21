@@ -1,39 +1,42 @@
-import os
-import glob
-import shutil
+import io
+import openpyxl
 from flask import Flask, render_template, jsonify, request
 from thefuzz import fuzz
 
 app = Flask(__name__)
 
-DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
-os.makedirs(DATA_DIR, exist_ok=True)
-
-# Global data store
+# Global in-memory data store
 DATA = []
 DATA_SOURCE = ""
 
 
 def safe_int(v, default=0):
-    if v is None: return default
-    try: return int(v)
-    except (ValueError, TypeError): return default
+    if v is None:
+        return default
+    try:
+        return int(v)
+    except (ValueError, TypeError):
+        return default
 
 
 def safe_float(v, default=0.0):
-    if v is None: return default
-    try: return float(v)
-    except (ValueError, TypeError): return default
+    if v is None:
+        return default
+    try:
+        return float(v)
+    except (ValueError, TypeError):
+        return default
 
 
-def load_xlsx(path):
-    import openpyxl
-    wb = openpyxl.load_workbook(path, data_only=True)
+def load_xlsx_from_bytes(file_bytes):
+    """Parse Excel file directly from memory without saving to disk."""
+    wb = openpyxl.load_workbook(io.BytesIO(file_bytes), data_only=True)
     ws = wb.active
     rows = []
     for row in ws.iter_rows(min_row=2, max_row=ws.max_row, values_only=True):
         dead = str(row[28] or "N").strip().upper()
-        if not dead or dead == "NONE": dead = "N"
+        if not dead or dead == "NONE":
+            dead = "N"
         rows.append({
             "ROOT_PART_NUM": str(row[0] or "").strip(),
             "LATEST_PART_NUM": str(row[1] or "").strip(),
@@ -69,24 +72,7 @@ def load_xlsx(path):
     return rows
 
 
-def reload_data():
-    global DATA, DATA_SOURCE
-    DATA = []
-    DATA_SOURCE = ""
-    xlsx_files = sorted(glob.glob(os.path.join(DATA_DIR, "*.xlsx")), reverse=True)
-    if xlsx_files:
-        DATA = load_xlsx(xlsx_files[0])
-        DATA_SOURCE = os.path.basename(xlsx_files[0])
-        print(f"[INFO] Loaded {len(DATA)} rows from {DATA_SOURCE}")
-    else:
-        print("[WARN] No .xlsx file found in data/")
-
-
-# Initial load
-reload_data()
-
-
-# --- 4 Alert Functions ---
+# --- Alert Functions ---
 
 def alert_low_consumption_high_value(data, t_avg=1.0, t_price=2000):
     return [r for r in data if r["AVG_CONSUMPTION"] < t_avg and r["PURCHASE_PRICE"] > t_price and r["SOQ_QTY"] > 0]
@@ -147,9 +133,11 @@ def get_alert(alert_id):
     params = request.args.to_dict(flat=True)
     defaults = ALERT_DEFAULTS.get(alert_id, {})
     for k, v in defaults.items():
-        if k not in params: params[k] = str(v)
+        if k not in params:
+            params[k] = str(v)
     for k in list(params.keys()):
-        if k.startswith("t_"): params[k] = float(params[k])
+        if k.startswith("t_"):
+            params[k] = float(params[k])
     try:
         items = ALERT_FUNCTIONS[alert_id](DATA, **{k: v for k, v in params.items() if k.startswith("t_")})
     except TypeError:
@@ -166,19 +154,33 @@ def search():
     scored = []
     for row in DATA:
         if query_lower == row["ROOT_PART_NUM"].lower() or query_lower == row["LATEST_PART_NUM"].lower():
-            scored.append((row, 100, "exact")); continue
-        best = max(fuzz.token_set_ratio(query, row["ROOT_PART_NUM"]),
-                   fuzz.token_set_ratio(query, row["LATEST_PART_NUM"]),
-                   fuzz.token_set_ratio(query, row["PART_DESC"]))
-        if query_lower in row["ROOT_PART_NUM"].lower() or query_lower in row["LATEST_PART_NUM"].lower() or query_lower in row["PART_DESC"].lower():
+            scored.append((row, 100, "exact"))
+            continue
+        best = max(
+            fuzz.token_set_ratio(query, row["ROOT_PART_NUM"]),
+            fuzz.token_set_ratio(query, row["LATEST_PART_NUM"]),
+            fuzz.token_set_ratio(query, row["PART_DESC"])
+        )
+        if (
+            query_lower in row["ROOT_PART_NUM"].lower()
+            or query_lower in row["LATEST_PART_NUM"].lower()
+            or query_lower in row["PART_DESC"].lower()
+        ):
             best = max(best, 80)
-        if best >= 40: scored.append((row, best, "fuzzy"))
+        if best >= 40:
+            scored.append((row, best, "fuzzy"))
     scored.sort(key=lambda x: -x[1])
-    return jsonify({"query": query, "results": [{"item": s[0], "score": s[1], "match_type": s[2]} for s in scored[:50]], "total": min(len(scored), 50)})
+    return jsonify({
+        "query": query,
+        "results": [{"item": s[0], "score": s[1], "match_type": s[2]} for s in scored[:50]],
+        "total": min(len(scored), 50)
+    })
 
 
 @app.route("/api/upload", methods=["POST"])
 def upload():
+    global DATA, DATA_SOURCE
+
     if "file" not in request.files:
         return jsonify({"error": "No file uploaded"}), 400
     f = request.files["file"]
@@ -187,13 +189,11 @@ def upload():
     if not f.filename.lower().endswith((".xlsx", ".xls")):
         return jsonify({"error": "Only .xlsx / .xls files are supported"}), 400
 
-    # Save to data dir
-    save_path = os.path.join(DATA_DIR, f.filename)
-    f.save(save_path)
-
-    # Reload
     try:
-        reload_data()
+        # Read byte stream directly without saving to disk
+        file_bytes = f.read()
+        DATA = load_xlsx_from_bytes(file_bytes)
+        DATA_SOURCE = f.filename
         return jsonify({"rows": len(DATA), "source": DATA_SOURCE})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
