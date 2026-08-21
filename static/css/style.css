@@ -6,14 +6,14 @@
   --bg-card: oklch(0.9818 0.0054 95.0986);
   --bg-card-hover: oklch(0.9341 0.0153 90.2390); /* Muted */
   --bg-dark: oklch(0.1908 0.0020 106.5859);
-  
+
   --text-main: oklch(0.3438 0.0269 95.7226);
   --text-muted: oklch(0.6059 0.0075 97.4233);
   --text-inverse: oklch(0.9818 0.0054 95.0986);
-  
+
   --border-main: oklch(0.8847 0.0069 97.3627);
   --border-dark: oklch(0.3438 0.0269 95.7226);
-  
+
   --accent-clay: oklch(0.6171 0.1375 39.0427); /* Primary */
   --accent-olive: oklch(0.5583 0.1276 42.9956); /* Chart 1 */
   --accent-ochre: oklch(0.6898 0.1581 290.4107); /* Chart 2 */
@@ -46,14 +46,14 @@ html.dark {
   --bg-card: oklch(0.2679 0.0036 106.6427);
   --bg-card-hover: oklch(0.2213 0.0038 106.7070); /* Muted */
   --bg-dark: oklch(0.9818 0.0054 95.0986);
-  
+
   --text-main: oklch(0.8074 0.0142 93.0137);
   --text-muted: oklch(0.7713 0.0169 99.0657);
   --text-inverse: oklch(0.2679 0.0036 106.6427);
-  
+
   --border-main: oklch(0.3618 0.0101 106.8928);
   --border-dark: oklch(0.8074 0.0142 93.0137);
-  
+
   --accent-clay: oklch(0.6724 0.1308 38.7559);
   --accent-olive: oklch(0.5583 0.1276 42.9956);
   --accent-ochre: oklch(0.6898 0.1581 290.4107);
@@ -63,9 +63,9 @@ html.dark {
 /* ===== Global Resets & Theme Support ===== */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
-html { 
-  font-size: 15px; 
-  scroll-behavior: smooth; 
+html {
+  font-size: 15px;
+  scroll-behavior: smooth;
   /* Cross-browser scrollbar (Firefox standard) */
   scrollbar-width: thin;
   scrollbar-color: var(--border-main) var(--bg-page);
@@ -255,7 +255,7 @@ html:not(.dark) .sun-icon { display: none; }
   font-size: clamp(1.6rem, 3vw + 1rem, 2.2rem);
   line-height: 1.1;
   letter-spacing: -0.02em;
-  
+
   /* These lines fix the wrapping issue */
   white-space: nowrap;
   overflow: hidden;
@@ -648,16 +648,16 @@ html:not(.dark) .sun-icon { display: none; }
 /* ===== Responsive Adaptations ===== */
 @media (max-width: 768px) {
   .app-container { padding: var(--space-4); }
-  
+
   .header h1 { font-size: 2rem; }
   .header p { font-size: 1rem; }
-  
+
   .summary-bar { grid-template-columns: repeat(2, 1fr); }
   .summary-stat {
     border-right: 1px solid var(--border-main);
     border-bottom: 1px solid var(--border-main);
   }
-  
+
   .upload-left { flex-direction: column; align-items: flex-start; }
   .btn { width: 100%; justify-content: center; }
 
@@ -665,7 +665,7 @@ html:not(.dark) .sun-icon { display: none; }
   .threshold-slider::-webkit-slider-thumb {
     width: 24px;
     height: 24px;
-    margin-top: -10px; 
+    margin-top: -10px;
   }
   .threshold-slider::-moz-range-thumb {
     width: 22px;
@@ -674,10 +674,10 @@ html:not(.dark) .sun-icon { display: none; }
 
   .threshold-row { flex-direction: column; align-items: stretch; gap: 12px; }
   .threshold-value { text-align: left; }
-  
+
   .alert-item-row { flex-direction: column; align-items: flex-start; gap: 12px; }
   .air-value-tag { align-self: flex-start; }
-  
+
   .detail-row { flex-direction: column; gap: 4px; }
   .detail-value { text-align: left; font-size: 1.1rem; }
 }

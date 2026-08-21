@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SOQ Alert Dashboard — Claude Theme</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">  
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <!-- Upgraded Typography: Instrument Sans, Newsreader, JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,6 +18,12 @@
       document.documentElement.classList.remove('dark');
     }
   </script>
+
+  <!-- Client-side Libraries (CDN) - Required for Excel parsing & search -->
+  <!-- SheetJS for Excel parsing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <!-- Fuse.js for fuzzy search -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.6.2/fuse.min.js"></script>
 </head>
 <body>
 
