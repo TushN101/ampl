@@ -242,6 +242,39 @@
         return data.filter(r => r.ON_ORDER_QTY > 0 && r.SOQ_QTY > 0);
       }
     },
+    /**
+     * NEW ALERT — New Part PNA Requisition
+     *
+     * Note: we deliberately do NOT require SOQ_QTY > 0 here. The point of
+     * this alert is to catch new parts that the auto-order pipeline may
+     * touch because of the open requisition, regardless of whether the SOQ
+     * formula produced a number. (Empirically ~9 of 10 matching rows do
+     * carry SOQ > 0, but the 10th is exactly the kind of edge case a human
+     * should see.)
+     */
+    {
+      id: 'new_part_pna_requisition',
+      title: 'New Part — PNA with Service Requisition',
+      subtitle: 'Out-of-stock new parts requested by Service — verify before auto-order',
+      color: 'text-clay',
+      thresholds: [
+        { key: 't_cbo', label: 'Min Backorder (CBO) ≥', min: 1, max: 20, step: 1, defaultVal: 1, format: function(v){ return Math.round(safeFloat(v)); } },
+      ],
+      valueTag: function(r){
+        // Show the most decision-relevant number: open Service requisition qty
+        return 'CBO: ' + r.CUST_BACK_ORDER;
+      },
+      filter: function(data, params) {
+        const t_cbo = safeInt(params.t_cbo, 1);
+        return data.filter(r =>
+          r.STOCK_QTY === 0 &&                       // PNA — Part Not Available
+          r.CUST_BACK_ORDER >= t_cbo &&              // Service requisition open
+          r.CUST_BACK_ORDER > 0 &&                   // (defensive: at least 1)
+          r.PART_FAMILY_AGE !== 'Old Part' &&        // flag other than 'Old Part'
+          String(r.PART_FAMILY_AGE || '').trim() !== '' // ignore blank age rows
+        );
+      }
+    },
   ];
 
   // ============================================================
@@ -602,9 +635,14 @@
 
     itemsContainer.innerHTML = displayItems.map(function(item) {
       const partDisplay = displayPart(item);
+      // For the new-part alert, surface the age flag as a small badge so the
+      // reviewer instantly sees it's a "New Part" / non-Old-Part item.
+      const ageBadge = (alertId === 'new_part_pna_requisition' && item.PART_FAMILY_AGE)
+        ? '<span class="air-age-badge">' + escapeHtml(item.PART_FAMILY_AGE) + '</span>'
+        : '';
       return '<div class="alert-item-row" data-part="' + escapeHtml(item.ROOT_PART_NUM) + '">' +
         '<div class="air-content">' +
-          '<div class="air-part">' + escapeHtml(partDisplay) + '</div>' +
+          '<div class="air-part">' + escapeHtml(partDisplay) + ' ' + ageBadge + '</div>' +
           '<div class="air-name">' + escapeHtml(item.PART_DESC) + '</div>' +
           '<div class="air-metrics">' +
             '<span>STK: ' + item.STOCK_QTY + '</span>' +
@@ -745,12 +783,18 @@
     const stockValue = item.STOCK_QTY * item.PURCHASE_PRICE;
     const isDead = item.DEAD_STOCK_YN === 'Y';
     const isSuperseded = item.is_superseded;
+    // Highlight the "PNA + New Part + CBO" combo inside the modal so the
+    // reviewer immediately understands why this item popped up.
+    const isPna = item.STOCK_QTY === 0;
+    const isNonOldPart = item.PART_FAMILY_AGE && item.PART_FAMILY_AGE !== 'Old Part';
+    const isRequisitionOpen = item.CUST_BACK_ORDER > 0;
+    const isReviewCandidate = isPna && isNonOldPart && isRequisitionOpen;
 
     const fields = [
       { label: 'Root Part Number', value: item.ROOT_PART_NUM, cls: isSuperseded ? 'highlight-orange' : '' },
       { label: 'Latest Part Number', value: item.LATEST_PART_NUM, cls: isSuperseded ? 'highlight-green' : '' },
       { label: 'Part Description', value: item.PART_DESC },
-      { label: 'Part Family Age', value: item.PART_FAMILY_AGE || 'N/A' },
+      { label: 'Part Family Age', value: item.PART_FAMILY_AGE || 'N/A', cls: isNonOldPart ? 'highlight-orange' : '' },
       { label: 'Current Stock', value: item.STOCK_QTY, cls: item.STOCK_QTY === 0 ? 'highlight-red' : '' },
       { label: 'On Order Qty', value: item.ON_ORDER_QTY, cls: item.ON_ORDER_QTY > 0 ? 'highlight-blue' : '' },
       { label: 'Customer Back Order', value: item.CUST_BACK_ORDER, cls: item.CUST_BACK_ORDER > 0 ? 'highlight-red' : '' },
@@ -770,6 +814,16 @@
       { label: 'Dead Stock', value: isDead ? 'YES' : 'NO', cls: isDead ? 'highlight-red' : 'highlight-green' },
       { label: 'Location', value: item.LOC_CD || 'N/A' },
     ];
+
+    // If this item is a New-Part-PNA-Requisition candidate, prepend a banner
+    // row at the top of the modal explaining why it deserves human review.
+    if (isReviewCandidate) {
+      fields.unshift({
+        label: '⚠ Review Trigger',
+        value: 'PNA + Service requisition + ' + (item.PART_FAMILY_AGE || 'non-Old-Part') + ' — manual review recommended before auto-order',
+        cls: 'highlight-red',
+      });
+    }
 
     body.innerHTML = fields.map(function(f) {
       return '<div class="detail-row">' +

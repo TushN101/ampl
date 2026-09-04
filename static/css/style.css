@@ -512,6 +512,10 @@ html:not(.dark) .sun-icon { display: none; }
   font-family: var(--font-mono);
   color: var(--text-muted);
   margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .air-name {
@@ -535,6 +539,36 @@ html:not(.dark) .sun-icon { display: none; }
   border: 1px solid var(--border-main);
   background: var(--bg-page);
   white-space: nowrap;
+}
+
+/* ===== New-Part age badge (used by the "New Part PNA Requisition" alert) ===== */
+/* Small pill that highlights the PART_FAMILY_AGE flag inside an alert row,
+   so the reviewer instantly sees it's a New Part / non-Old-Part item. */
+.air-age-badge {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent-clay);
+  background: color-mix(in oklch, var(--accent-clay) 12%, transparent);
+  border: 1px solid color-mix(in oklch, var(--accent-clay) 35%, transparent);
+  line-height: 1.5;
+}
+
+/* Subtle attention pulse on the new-part alert card so it doesn't get lost
+   among the four pre-existing cards. Only pulses once on initial render. */
+@keyframes newPartAttentionPulse {
+  0%   { box-shadow: 0 0 0 0 color-mix(in oklch, var(--accent-clay) 35%, transparent); }
+  70%  { box-shadow: 0 0 0 10px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+#card-new_part_pna_requisition {
+  animation: newPartAttentionPulse 1.6s ease-out 1;
 }
 
 .alert-empty {
