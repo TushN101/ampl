@@ -1,5 +1,28 @@
 /* ===== SOQ Alert Dashboard — Claude/Anthropic Design System ===== */
 
+/* ===== Font Declarations ===== */
+@font-face {
+  font-family: 'customSans';
+  src: url('/static/font/customSans.woff2') format('woff2'),
+       url('../font/customSans.woff2') format('woff2'),
+       url('/static/fonts/customSans.woff2') format('woff2'),
+       url('../fonts/customSans.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'CustomSans';
+  src: url('/static/font/customSans.woff2') format('woff2'),
+       url('../font/customSans.woff2') format('woff2'),
+       url('/static/fonts/customSans.woff2') format('woff2'),
+       url('../fonts/customSans.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   /* LIGHT THEME (Mapped from provided OKLCH values) */
   --bg-page: oklch(0.9818 0.0054 95.0986);
@@ -20,7 +43,7 @@
   --accent-sky: oklch(0.5608 0.1348 42.0584); /* Chart 5 */
 
   /* Upgraded Typography */
-  --font-sans: 'Instrument Sans', system-ui, sans-serif;
+  --font-sans: 'customSans', 'CustomSans', 'Instrument Sans', system-ui, sans-serif;
   --font-serif: 'Newsreader', Georgia, serif;
   --font-mono: 'JetBrains Mono', monospace;
 

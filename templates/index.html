@@ -5,10 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SOQ Alert Dashboard — Claude Theme</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  <!-- Upgraded Typography: Instrument Sans, Newsreader, JetBrains Mono -->
+  <!-- Custom Typography: customSans from /static/font folder -->
+  <link rel="preload" href="/static/font/customSans.woff2" as="font" type="font/woff2" crossorigin>
+  <style>
+    @font-face {
+      font-family: 'customSans';
+      src: url('/static/font/customSans.woff2') format('woff2'),
+           url('/static/fonts/customSans.woff2') format('woff2');
+      font-weight: 100 900;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'CustomSans';
+      src: url('/static/font/customSans.woff2') format('woff2'),
+           url('/static/fonts/customSans.woff2') format('woff2');
+      font-weight: 100 900;
+      font-style: normal;
+      font-display: swap;
+    }
+  </style>
+
+  <!-- Typography: JetBrains Mono, Newsreader -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap" rel="stylesheet">
 
   <!-- Prevent Flash of Unstyled Content (FOUC) for Dark Mode -->
   <script>
@@ -59,7 +80,7 @@
     <!-- Summary Stats -->
     <section class="summary-bar divider-bottom">
       <div class="summary-stat">
-        <div class="stat-label">Total SKUs</div>
+        <div class="stat-label">Total Stock Units</div>
         <div class="stat-value" id="statSkus">—</div>
       </div>
       <div class="summary-stat">
@@ -114,6 +135,6 @@
     </div>
   </div>
 
-  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  <script type="module" src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>
