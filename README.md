@@ -6,6 +6,4 @@ Detects risky orders, misclassified dead stock, stockout risks, backorders, and 
 
 ## Preview
 
-<p align="left">
-  <img src="https://github.com/user-attachments/assets/432b0aa9-1032-41d5-bfc1-516029e1e55f" alt="SOQ Alert Dashboard Preview" width="750" />
-</p>
+<img width="800" height="479" alt="preview" src="https://github.com/user-attachments/assets/2ad7fe4e-94b3-4759-bc5c-3e1cb1345a4c" />
